@@ -1,7 +1,7 @@
 import bpy
 
 #从ui_pennel引入面板类
-from .ui_panel import MaterialPanel,TextPanel,OriginPanel, GenerateMazePanel,FixModelPanel,CreatePolygonPanel,GenerateRoadPanel, GenerateStonePanel,ProceduralGeneratePanel
+from .ui_panel import MaterialPanel,TextPanel,OriginPanel, GenerateMazePanel,FixModelPanel,CreatePolygonPanel,GenerateRoadPanel, GenerateStonePanel,ProceduralGeneratePanel,DensePointCloudPanel, DensePointCloudPanel_PointHandler,MaterialPanel_uv
 #,DXFGeneratorPanel,GenerateStairsPanel
 
 # 引入的类名
@@ -16,9 +16,12 @@ from .ultrs import (
     OBJECT_OT_create_polygon,
     MESH_OT_generate_road_independent,
     MESH_OT_generate_road_linked,
-    MESH_OT_generate_stone
+    MESH_OT_generate_stone,
     #ULTRS_GENERATE_stairs,
     #ULTRS_GENERATE_from_dxf, # DXF 快速生成 3D
+    OBJECT_OT_create_grid_faces,
+    OBJECT_OT_assign_uv_by_xy_grid,
+
 )
 
 classes = [
@@ -60,14 +63,21 @@ classes = [
 
     # 快速生成石块
     GenerateStonePanel,
-    MESH_OT_generate_stone
+    MESH_OT_generate_stone,
 
+    DensePointCloudPanel, 
+    DensePointCloudPanel_PointHandler,
+    OBJECT_OT_create_grid_faces,
 
     # 暂时不放
     # GenerateStairsPanel,
     # DXFGeneratorPanel,
     # ULTRS_GENERATE_stairs,
     # ULTRS_GENERATE_from_dxf,
+
+    MaterialPanel_uv,
+    OBJECT_OT_assign_uv_by_xy_grid
+
 ]
 
 def register():

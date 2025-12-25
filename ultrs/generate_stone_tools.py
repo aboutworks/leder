@@ -87,6 +87,41 @@ bpy.types.Scene.stone_color_max = bpy.props.FloatProperty(
     max=1.0
 )
 
+# ==================== 新增：通用材质节点获取函数（解决多语言问题） =====================
+def get_principled_bsdf_node(mat):
+    """
+    安全获取Principled BSDF节点（兼容多语言）
+    - 优先按节点类型查找，而非名称
+    - 不存在则自动创建
+    """
+    # 确保材质启用节点
+    if not mat.use_nodes:
+        mat.use_nodes = True
+    
+    # 方法1：按节点类型查找（最可靠，不受语言影响）
+    for node in mat.node_tree.nodes:
+        if node.type == 'BSDF_PRINCIPLED':
+            return node
+    
+    # 方法2：如果没有，手动创建Principled BSDF节点
+    bsdf_node = mat.node_tree.nodes.new(type='ShaderNodeBsdfPrincipled')
+    bsdf_node.location = (0, 0)  # 设置节点位置
+    
+    # 连接到输出节点（确保材质生效）
+    output_node = None
+    for node in mat.node_tree.nodes:
+        if node.type == 'OUTPUT_MATERIAL':
+            output_node = node
+            break
+    if not output_node:
+        output_node = mat.node_tree.nodes.new(type='ShaderNodeOutputMaterial')
+        output_node.location = (300, 0)
+    
+    # 连接BSDF到输出
+    mat.node_tree.links.new(bsdf_node.outputs['BSDF'], output_node.inputs['Surface'])
+    
+    return bsdf_node
+
 # ==================== 2. 核心工具函数（基于面的随机点）====================
 def create_auto_stone(scene):
     """完全自动创建石块"""
@@ -114,12 +149,12 @@ def create_auto_stone(scene):
         v.co.z *= perturb
     mesh.update()
     
-    # 创建基础材质
+    # 创建基础材质（修复核心：使用通用节点获取函数）
     mat = bpy.data.materials.new(name="Auto_Stone_Material")
-    mat.use_nodes = True
-    bsdf = mat.node_tree.nodes['Principled BSDF']
+    bsdf = get_principled_bsdf_node(mat)  # ✅ 替换原有的直接索引方式
     bsdf.inputs['Base Color'].default_value = (0.7, 0.7, 0.7, 1.0)
     bsdf.inputs['Roughness'].default_value = 0.9
+    
     if auto_stone.data.materials:
         auto_stone.data.materials[0] = mat
     else:
@@ -146,10 +181,11 @@ def create_distribution_plane(scene):
     bpy.ops.mesh.subdivide(number_cuts=10)  # 细分10次，生成更多面
     bpy.ops.object.mode_set(mode='OBJECT')
     
-    # 平面材质
+    # 平面材质（同样修复节点获取）
     mat = bpy.data.materials.new(name="Distribution_Plane_Mat")
-    mat.use_nodes = True
-    mat.node_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value = (0.2, 0.3, 0.2, 1.0)
+    bsdf = get_principled_bsdf_node(mat)  # ✅ 修复
+    bsdf.inputs['Base Color'].default_value = (0.2, 0.3, 0.2, 1.0)
+    
     if plane.data.materials:
         plane.data.materials[0] = mat
     else:
@@ -258,12 +294,14 @@ def transform_stone(obj, scene, face_data_list):
     scale = random.uniform(scene.stone_scale_min, scene.stone_scale_max)
     obj.scale = (scale, scale, scale)
     
-    # 5. 随机颜色（仅独立复制时生效）
+    # 5. 随机颜色（仅独立复制时生效，修复节点获取）
     if scene.stone_copy_mode == "INDEPENDENT" and obj.data.materials:
         mat_inst = obj.data.materials[0].copy()
         mat_inst.name = f"Stone_Mat_{obj.name}"
         gray = random.uniform(scene.stone_color_min, scene.stone_color_max)
-        mat_inst.node_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value = (gray, gray, gray, 1.0)
+        # ✅ 修复：使用通用函数获取节点
+        bsdf = get_principled_bsdf_node(mat_inst)
+        bsdf.inputs['Base Color'].default_value = (gray, gray, gray, 1.0)
         obj.data.materials[0] = mat_inst
 
 # ==================== 3. 核心算子（基于面的随机点）====================
@@ -342,6 +380,8 @@ class MESH_OT_generate_stone(bpy.types.Operator):
         
         self.report({'INFO'}, _("✅ Successfully generated {count} stones on object faces!").format(count=stone_count))
         return {'FINISHED'}
+
+
 
 # ==================== 中日翻译字典（完整覆盖）====================
 # translations = {
