@@ -154,9 +154,9 @@ v1.0.0 (Initial Release)
 
 We welcome your feedback and feature requests! If you encounter any bugs or problems, please report them via:
 
-- GitHub Issues: https://github.com/your-username/lehuye-leder/issues (replace with your actual repo link)
+- GitHub Issues: https://github.com/aboutworks/lehuye-leder/issues (replace with your actual repo link)
 
-- Email: your-email@example.com (replace with your contact email)
+- Email: aboutworks@outlook.com (replace with your contact email)
 
 📄 License
 
